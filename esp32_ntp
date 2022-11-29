@@ -1,0 +1,42 @@
+#include <NTPClient.h>
+#include <GyverOLED.h>
+#include <WiFi.h>
+#include <WiFiUdp.h>
+
+const char *ssid     = "Home"; 	//所连接的wifi ssid
+char *password = "12345678"; 	//wifi密码
+
+OLED<SSH1106_128x64> oled; //显示对象
+
+WiFiUDP ntpUDP; //ntpUDPNTPClient 
+timeClient(ntpUDP);// NTPClient 
+timeClient(ntpUDP, "europe.pool.ntp.org", 3600, 60000); //您还可以更详细地配置池和传输延迟。
+
+void setup()
+{  
+	oled.init(); //初始化显示
+	oled.setContrast(255);  
+	oled.home();  
+	oled.setScale(2);  
+	oled.invertText(false);  
+	Serial.begin(115200);  
+	WiFi.begin(ssid, password); //Wifi  
+	while (WiFi.status() != WL_CONNECTED) 
+	{    
+		delay (500);    
+		Serial.print (".");  
+	}  
+	timeClient.begin(); //启动时间客户端 
+	timeClient.setTimeOffset(28800); //指定与格林威治标准时间的时间偏移. 北京GMT表示格林尼治时间 //北京时区 GMT +8 = 60*60*8 = 28800 
+}
+void loop() 
+{  
+	timeClient.update(); //联网更新时间
+	oled.clear();  
+	oled.setCursor(15, 2);  
+	oled.print(timeClient.getFormattedTime()); //显示时间  
+	oled.setCursor(5, 5);  
+	oled.print(timeClient.getFormattedDate().substring(0, 10)); //显示日期
+	oled.update();  
+	delay(1000);
+}
